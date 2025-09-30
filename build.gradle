@@ -30,3 +30,22 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+
+// ① 프런트 빌드
+tasks.register('buildFrontend', Exec) {
+	workingDir "$projectDir/frontend"
+	commandLine (System.properties['os.name'].toLowerCase().contains('windows')
+			? ["cmd", "/c", "npm", "run", "build"]
+			: ["bash", "-lc", "npm run build"])
+}
+
+// ② dist → Spring 정적리소스로 복사 (/app 하위)
+tasks.register('copyFrontend', Copy) {
+	dependsOn 'buildFrontend'
+	from("$projectDir/frontend/dist")
+	into("$projectDir/src/main/resources/static/app")
+}
+
+// ③ 리소스 처리 전에 복사되도록 연결
+processResources.dependsOn 'copyFrontend'
