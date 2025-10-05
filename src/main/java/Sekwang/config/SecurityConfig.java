@@ -21,24 +21,8 @@ public class SecurityConfig {
         http.sessionManagement(sm -> sm.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(auth -> auth
-                // 인증 없이 허용 (auth)
-                .requestMatchers("/api/auth/**").permitAll()
-
-                // ✅ 공개 읽기 엔드포인트 (정확 경로 + 하위 경로 모두 허용)
-                .requestMatchers(org.springframework.http.HttpMethod.GET,
-                        "/api/notices", "/api/notices/**",
-                        "/api/songs", "/api/songs/**",
-                        "/api/bulletins", "/api/bulletins/**",
-                        "/api/gallery", "/api/gallery/**"
-                ).permitAll()
-
-                // 관리자 전용 (예시)
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                // 삭제는 관리자/리더만
-                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**").hasAnyRole("ADMIN","LEADER")
-
-                // 그 외는 인증 필요
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/api/**").permitAll()     // ← 임시 전면 허용
                 .anyRequest().authenticated()
         );
 
