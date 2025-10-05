@@ -7,6 +7,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -94,5 +95,16 @@ public class JwtUtil {
         } catch (Exception e) {
             return false; // 파싱 실패/서명 오류/만료 등
         }
+    }
+
+    public String generateToken(String username, String roleName) {
+        if (roleName == null) {
+            // 권한 없이 생성
+            return generateToken(username, Collections.emptyList());
+        }
+        // ROLE_ 프리픽스 보정
+        String role = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName;
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+        return generateToken(username, authorities);
     }
 }
