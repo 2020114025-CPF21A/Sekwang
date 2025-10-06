@@ -28,7 +28,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // 0) CORS 프리플라이트는 무조건 패스
+        // 0) CORS 프리플라이트는 무조건 통과
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -36,37 +36,43 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String path = request.getRequestURI();
 
-        // 1) 공개 엔드포인트는 바로 패스
+        // 1) 공개 엔드포인트는 바로 통과
         if (isPublic(path, request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2) Authorization 헤더 확인
+        // 2) Authorization 헤더 확인 (없으면 막지 않고 통과 → 이후 SecurityConfig에서 판정)
         String header = request.getHeader("Authorization");
         if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
-            // 헤더 없으면 차단하지 말고 다음 필터로 (SecurityConfig가 판정)
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = header.substring(7).trim();
+
         try {
             String username = jwtUtil.extractUsername(token);
-            if (StringUtils.hasText(username) &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            if (StringUtils.hasText(username)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 UserDetails user = userDetailsService.loadUserByUsername(username);
+
                 if (jwtUtil.validateToken(token, user)) {
                     UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                            new UsernamePasswordAuthenticationToken(
+                                    user, null, user.getAuthorities());
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    // 유효하지 않으면 컨텍스트만 비우고 계속 진행
+                    SecurityContextHolder.clearContext();
                 }
             }
-        } catch (Exception ex) {
-            // 파싱/검증 에러가 나도 여기서 막지 않고 흘려보냄 (로그만 남기고 싶으면 주석 해제)
-            // log.warn("JWT 검증 실패: {}", ex.getMessage());
+        } catch (Exception e) {
+            // 파싱/검증 예외가 나도 여기서 401/403을 직접 쓰지 않고 체인 계속
+            SecurityContextHolder.clearContext();
         }
 
         // 3) 다음 필터로
@@ -74,8 +80,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublic(String path, String method) {
-        // 인증/회원가입 계열
+        // 인증 관련 공개
         if (path.startsWith("/api/auth/")) return true;
+
+        // 정적 리소스/헬스체크 등 필요하면 추가
+        if (path.startsWith("/actuator/health")) return true;
 
         // 읽기 공개 리소스 (GET만)
         if ("GET".equalsIgnoreCase(method)) {
@@ -84,8 +93,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (path.equals("/api/bulletins") || path.startsWith("/api/bulletins/")) return true;
             if (path.equals("/api/gallery") || path.startsWith("/api/gallery/")) return true;
         }
-
-        // 필요 시 추가 공개 경로 여기에 더하기
         return false;
     }
 }
