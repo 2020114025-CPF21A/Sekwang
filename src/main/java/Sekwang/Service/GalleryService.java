@@ -10,28 +10,44 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service @RequiredArgsConstructor
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
 public class GalleryService {
+
     private final GalleryRepository repo;
     private final MemberRepository memberRepo;
 
     @Transactional
-    public GalleryItem create(GalleryDto.CreateReq req){
-        Member uploader = req.uploader()==null? null :
+    public GalleryItem create(GalleryDto.CreateReq req) {
+        Member uploader = req.uploader() == null ? null :
                 memberRepo.findById(req.uploader())
                         .orElseThrow(() -> new IllegalArgumentException("업로더 없음"));
+
+        LocalDateTime now = LocalDateTime.now(); // ✅ 추가됨
+
         GalleryItem gi = GalleryItem.builder()
-                .title(req.title()).category(req.category()).fileUrl(req.fileUrl())
-                .description(req.description()).uploader(uploader).build();
+                .title(req.title())
+                .category(req.category())
+                .fileUrl(req.fileUrl())
+                .description(req.description())
+                .uploader(uploader)
+                .createdAt(now)   // ✅ 추가됨
+                .build();
+
         return repo.save(gi);
     }
 
     @Transactional(readOnly = true)
-    public Page<GalleryItem> list(String category, int page, int size){
+    public Page<GalleryItem> list(String category, int page, int size) {
         PageRequest pr = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        if (category==null || category.isBlank()) return repo.findAll(pr);
+        if (category == null || category.isBlank()) return repo.findAll(pr);
         return repo.findByCategoryOrderByCreatedAtDesc(category, pr);
     }
 
-    @Transactional public void delete(Long id){ repo.deleteById(id); }
+    @Transactional
+    public void delete(Long id) {
+        repo.deleteById(id);
+    }
 }

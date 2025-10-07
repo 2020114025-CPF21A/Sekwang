@@ -1,13 +1,13 @@
 package Sekwang.Service;
 
-import Sekwang.Domain.Member;
 import Sekwang.Domain.OxQuestion;
 import Sekwang.Domain.OxQuizResult;
 import Sekwang.Domain.OxQuizSet;
-import Sekwang.Repository.MemberRepository;
+import Sekwang.Domain.Member;
 import Sekwang.Repository.OxQuestionRepository;
 import Sekwang.Repository.OxQuizResultRepository;
 import Sekwang.Repository.OxQuizSetRepository;
+import Sekwang.Repository.MemberRepository;
 import Sekwang.api.DTO.OxDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,17 @@ public class OxService {
     private final OxQuizResultRepository rRepo;
     private final MemberRepository memberRepo;
 
+    // ✅ 전체 세트 목록 (랜덤 선택용)
+    @Transactional(readOnly = true)
+    public List<OxQuizSet> listAllSets() { return setRepo.findAll(); }
+
+    // ✅ 특정 세트 조회 추가 (getSetById)
+    @Transactional(readOnly = true)
+    public OxQuizSet getSetById(Long setId) {
+        return setRepo.findById(setId)
+                .orElseThrow(() -> new IllegalArgumentException("세트를 찾을 수 없습니다: " + setId));
+    }
+
     @Transactional
     public OxQuizSet createSet(OxDto.SetCreateReq req){
         Member creator = req.createdBy()==null? null :
@@ -32,9 +43,10 @@ public class OxService {
 
     @Transactional
     public OxQuestion addQuestion(OxDto.QCreateReq req){
-        if (req.answer()!=1 && req.answer()!=2) throw new IllegalArgumentException("answer는 1(O) 또는 2(X)");
-        OxQuizSet set = setRepo.findById(req.setId()).orElseThrow(() -> new IllegalArgumentException("세트 없음"));
-        OxQuestion q = OxQuestion.builder().set(set).question(req.question()).answer(req.answer()).build();
+        OxQuizSet set = getSetById(req.setId());
+        OxQuestion q = OxQuestion.builder()
+                .set(set).question(req.question())
+                .answer(req.answer()).build();
         return qRepo.save(q);
     }
 
@@ -44,7 +56,7 @@ public class OxService {
     @Transactional
     public OxQuizResult submit(OxDto.SubmitReq req){
         Member user = memberRepo.findById(req.username()).orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        OxQuizSet set = setRepo.findById(req.setId()).orElseThrow(() -> new IllegalArgumentException("세트 없음"));
+        OxQuizSet set = getSetById(req.setId());
         OxQuizResult r = OxQuizResult.builder().user(user).set(set).score(req.score()).build();
         return rRepo.save(r);
     }

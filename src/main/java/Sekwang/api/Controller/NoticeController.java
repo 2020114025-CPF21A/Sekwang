@@ -1,6 +1,6 @@
 package Sekwang.api.Controller;
 import Sekwang.Domain.Notice;
-import Sekwang.api.Service.NoticeService;
+import Sekwang.Service.NoticeService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,5 @@
-package Sekwang.api.Service;
+package Sekwang.Service;
 
-import Sekwang.Domain.Member;
 import Sekwang.Domain.Notice;
 import Sekwang.Repository.MemberRepository;
 import Sekwang.Repository.NoticeRepository;
@@ -35,12 +34,15 @@ public class NoticeService {
                 .orElseThrow(() -> new IllegalArgumentException("공지사항을 찾을 수 없습니다. id=" + id));
     }
 
-    // 생성
+    // 생성: author는 username 문자열로 저장
     @Transactional
     public Notice create(String title, String content, Boolean isImportant, String authorId) {
-        Member author = (authorId == null)
-                ? null
-                : memberRepository.findById(authorId)
+        if (authorId == null || authorId.isBlank()) {
+            throw new IllegalArgumentException("작성자(username)가 필요합니다.");
+        }
+
+        // 작성자 존재 검증만 수행 (문자열만 저장)
+        memberRepository.findById(authorId)
                 .orElseThrow(() -> new IllegalArgumentException("작성자(Member) 없음: id=" + authorId));
 
         LocalDateTime now = LocalDateTime.now();
@@ -49,7 +51,7 @@ public class NoticeService {
                 .title(title)
                 .content(content)
                 .isImportant(Boolean.TRUE.equals(isImportant))
-                .author(author)
+                .author(authorId)            // ✅ 문자열 username 저장
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -57,7 +59,7 @@ public class NoticeService {
         return noticeRepository.save(n);
     }
 
-    // 수정
+    // 수정: 넘어온 값만 반영, author는 username 문자열로 교체
     @Transactional
     public Notice update(Long id, String title, String content, Boolean isImportant, String authorId) {
         Notice n = get(id);
@@ -67,13 +69,14 @@ public class NoticeService {
         if (isImportant != null) n.setIsImportant(isImportant);
 
         if (authorId != null) {
-            Member author = memberRepository.findById(authorId)
+            // 존재 검증만 하고 문자열로 셋팅
+            memberRepository.findById(authorId)
                     .orElseThrow(() -> new IllegalArgumentException("작성자(Member) 없음: id=" + authorId));
-            n.setAuthor(author);
+            n.setAuthor(authorId);          // ✅ 문자열 username 저장
         }
 
         n.setUpdatedAt(LocalDateTime.now());
-        return n; // dirty checking 자동 반영
+        return n; // Dirty checking으로 반영
     }
 
     // 삭제

@@ -1,13 +1,13 @@
 package Sekwang.Service;
 
-import Sekwang.Domain.Member;
 import Sekwang.Domain.SpeedQuestion;
 import Sekwang.Domain.SpeedQuizResult;
 import Sekwang.Domain.SpeedQuizSet;
-import Sekwang.Repository.MemberRepository;
+import Sekwang.Domain.Member;
 import Sekwang.Repository.SpeedQuestionRepository;
 import Sekwang.Repository.SpeedQuizResultRepository;
 import Sekwang.Repository.SpeedQuizSetRepository;
+import Sekwang.Repository.MemberRepository;
 import Sekwang.api.DTO.SpeedDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,17 @@ public class SpeedService {
     private final SpeedQuizResultRepository rRepo;
     private final MemberRepository memberRepo;
 
+    // ✅ 전체 세트 목록 (랜덤 선택용)
+    @Transactional(readOnly = true)
+    public List<SpeedQuizSet> listAllSets() { return setRepo.findAll(); }
+
+    // ✅ 특정 세트 조회 추가 (getSetById)
+    @Transactional(readOnly = true)
+    public SpeedQuizSet getSetById(Long setId) {
+        return setRepo.findById(setId)
+                .orElseThrow(() -> new IllegalArgumentException("세트를 찾을 수 없습니다: " + setId));
+    }
+
     @Transactional
     public SpeedQuizSet createSet(SpeedDto.SetCreateReq req){
         Member creator = req.createdBy()==null? null :
@@ -32,9 +43,11 @@ public class SpeedService {
 
     @Transactional
     public SpeedQuestion addQuestion(SpeedDto.QCreateReq req){
-        SpeedQuizSet set = setRepo.findById(req.setId()).orElseThrow(() -> new IllegalArgumentException("세트 없음"));
-        SpeedQuestion q = SpeedQuestion.builder().set(set).question(req.question())
-                .accept1(req.accept1()).accept2(req.accept2()).accept3(req.accept3()).build();
+        SpeedQuizSet set = getSetById(req.setId());
+        SpeedQuestion q = SpeedQuestion.builder()
+                .set(set).question(req.question())
+                .accept1(req.accept1()).accept2(req.accept2()).accept3(req.accept3())
+                .build();
         return qRepo.save(q);
     }
 
@@ -44,7 +57,7 @@ public class SpeedService {
     @Transactional
     public SpeedQuizResult submit(SpeedDto.SubmitReq req){
         Member user = memberRepo.findById(req.username()).orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        SpeedQuizSet set = setRepo.findById(req.setId()).orElseThrow(() -> new IllegalArgumentException("세트 없음"));
+        SpeedQuizSet set = getSetById(req.setId());
         SpeedQuizResult r = SpeedQuizResult.builder().user(user).set(set).score(req.score()).build();
         return rRepo.save(r);
     }

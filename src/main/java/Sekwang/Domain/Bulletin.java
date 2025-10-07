@@ -16,7 +16,7 @@ public class  Bulletin {
     @Column(nullable=false) private java.time.LocalDate publishDate;
     @Column(nullable=false, length=500) private String fileUrl;
 
-    @Column(nullable=false) private Integer views = 0;
+    @Builder.Default @Column(nullable=false) private Integer views = 0;
 
     @Column(nullable=false) private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
 }
