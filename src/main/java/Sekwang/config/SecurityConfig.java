@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .cors(cors -> {}) // 🔹 CORS 활성화
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 🔹 preflight 허용
                         .requestMatchers("/api/auth/**").permitAll()            // 로그인/회원가입 등
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll() // GET 공개 API 허용
