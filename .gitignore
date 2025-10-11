@@ -6,9 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-application.properties
-application-S3.properties
-.secrets-db.properties
+application-secrets.properties
 .env
 .vscode
 .DS_Store
