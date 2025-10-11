@@ -26,6 +26,8 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.637'
 	runtimeOnly   'com.mysql:mysql-connector-j'
+	implementation 'org.springframework.security:spring-security-oauth2-resource-server'
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
 
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'

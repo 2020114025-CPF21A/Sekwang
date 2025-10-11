@@ -30,6 +30,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 🔹 preflight 허용
                         .requestMatchers("/api/auth/**").permitAll()            // 로그인/회원가입 등
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll() // GET 공개 API 허용
+                        // ⬇️ 출석 QR 정책
+                        .requestMatchers(HttpMethod.POST, "/api/attendance/qr").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/attendance/check-in").authenticated()
                         .anyRequest().authenticated()                           // 나머지는 JWT 필요
                 );
 

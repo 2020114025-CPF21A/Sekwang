@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
@@ -17,4 +18,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     @Query("select a from Attendance a where a.member.username=:username order by a.attendDate desc")
     List<Attendance> findRecentByUser(String username);
+
+    Optional<Attendance> findByMemberUsernameAndAttendDate(String username, LocalDate attendDate);
 }

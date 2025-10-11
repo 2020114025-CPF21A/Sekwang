@@ -19,6 +19,7 @@ public class AttendanceService {
 
     private final AttendanceRepository attendanceRepo;
     private final MemberRepository memberRepo;
+    private final AttendanceRepository repo;
 
     @Transactional
     public Attendance create(AttendanceCreateReq req) {
@@ -49,5 +50,19 @@ public class AttendanceService {
     @Transactional(readOnly = true)
     public List<Attendance> listByDate(LocalDate date) {
         return attendanceRepo.findByAttendDate(date);
+    }
+
+    @Transactional
+    public Attendance createIfNotExists(String username, LocalDate attendDate, String status) {
+        return repo.findByMemberUsernameAndAttendDate(username, attendDate)
+                .orElseGet(() -> {
+                    Member m = memberRepo.findByUsername(username)
+                            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+                    Attendance a = new Attendance();
+                    a.setMember(m);
+                    a.setAttendDate(attendDate);
+                    a.setStatus(Attendance.Status.valueOf(status));
+                    return repo.save(a);
+                });
     }
 }
