@@ -25,7 +25,7 @@ public class GalleryService {
                 memberRepo.findById(req.uploader())
                         .orElseThrow(() -> new IllegalArgumentException("업로더 없음"));
 
-        LocalDateTime now = LocalDateTime.now(); // ✅ 추가됨
+        LocalDateTime now = LocalDateTime.now();
 
         GalleryItem gi = GalleryItem.builder()
                 .title(req.title())
@@ -33,10 +33,38 @@ public class GalleryService {
                 .fileUrl(req.fileUrl())
                 .description(req.description())
                 .uploader(uploader)
-                .createdAt(now)   // ✅ 추가됨
+                .createdAt(now)
                 .build();
 
         return repo.save(gi);
+    }
+    
+    // 그룹 ID로 여러 이미지 생성
+    @Transactional
+    public void createGroup(GalleryDto.CreateReq baseReq, java.util.List<String> fileUrls) {
+        String groupId = java.util.UUID.randomUUID().toString();
+        Member uploader = baseReq.uploader() == null ? null :
+                memberRepo.findById(baseReq.uploader())
+                        .orElseThrow(() -> new IllegalArgumentException("업로더 없음"));
+        
+        LocalDateTime now = LocalDateTime.now();
+        
+        for (int i = 0; i < fileUrls.size(); i++) {
+            String title = fileUrls.size() > 1 
+                ? String.format("%s (%d/%d)", baseReq.title(), i + 1, fileUrls.size())
+                : baseReq.title();
+                
+            GalleryItem gi = GalleryItem.builder()
+                    .title(title)
+                    .category(baseReq.category())
+                    .fileUrl(fileUrls.get(i))
+                    .description(baseReq.description())
+                    .uploader(uploader)
+                    .createdAt(now)
+                    .groupId(groupId)
+                    .build();
+            repo.save(gi);
+        }
     }
 
     @Transactional(readOnly = true)

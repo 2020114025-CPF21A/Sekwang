@@ -11,6 +11,6 @@ public class GalleryDto {
             String uploader
     ) {}
     public record Res(
-            Long id, String title, String category, String fileUrl, String description, String uploader, String createdAt
+            Long id, String title, String category, String fileUrl, String description, String uploader, String createdAt, String groupId
     ) {}
 }

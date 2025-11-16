@@ -19,4 +19,8 @@ public class GalleryItem {
     private Member uploader;
 
     @Column(nullable=false) private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
+    
+    // 다중 이미지 그룹핑용 (같은 groupId = 같은 카드)
+    @Column(name="group_id", length=100)
+    private String groupId;
 }

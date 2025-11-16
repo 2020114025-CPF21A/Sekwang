@@ -50,7 +50,8 @@ public class GalleryController {
                 g.getFileUrl(),
                 g.getDescription(),
                 g.getUploader() == null ? null : g.getUploader().getUsername(),
-                g.getCreatedAt().toString()
+                g.getCreatedAt().toString(),
+                g.getGroupId()
         );
     }
 
@@ -79,7 +80,8 @@ public class GalleryController {
                         g.getFileUrl(),
                         g.getDescription(),
                         g.getUploader() == null ? null : g.getUploader().getUsername(),
-                        g.getCreatedAt().toString()
+                        g.getCreatedAt().toString(),
+                        g.getGroupId()
                 ))
                 .getContent();
     }
