@@ -25,8 +25,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         // 0) CORS 프리플라이트는 무조건 통과
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
@@ -60,9 +60,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 UserDetails user = userDetailsService.loadUserByUsername(username);
 
                 if (jwtUtil.validateToken(token, user)) {
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(
-                                    user, null, user.getAuthorities());
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            user, null, user.getAuthorities());
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } else {
@@ -81,17 +80,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private boolean isPublic(String path, String method) {
         // 인증 관련 공개
-        if (path.startsWith("/api/auth/")) return true;
+        if (path.startsWith("/api/auth/"))
+            return true;
 
         // 정적 리소스/헬스체크 등 필요하면 추가
-        if (path.startsWith("/actuator/health")) return true;
+        if (path.startsWith("/actuator/health"))
+            return true;
+
+        // 마인크래프트 이벤트 API 공개 (POST)
+        if (path.startsWith("/api/minecraft/events/"))
+            return true;
 
         // 읽기 공개 리소스 (GET만)
         if ("GET".equalsIgnoreCase(method)) {
-            if (path.equals("/api/notices") || path.startsWith("/api/notices/")) return true;
-            if (path.equals("/api/songs") || path.startsWith("/api/songs/")) return true;
-            if (path.equals("/api/bulletins") || path.startsWith("/api/bulletins/")) return true;
-            if (path.equals("/api/gallery") || path.startsWith("/api/gallery/")) return true;
+            if (path.equals("/api/notices") || path.startsWith("/api/notices/"))
+                return true;
+            if (path.equals("/api/songs") || path.startsWith("/api/songs/"))
+                return true;
+            if (path.equals("/api/bulletins") || path.startsWith("/api/bulletins/"))
+                return true;
+            if (path.equals("/api/gallery") || path.startsWith("/api/gallery/"))
+                return true;
         }
         return false;
     }
