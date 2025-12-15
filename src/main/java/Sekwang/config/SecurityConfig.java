@@ -24,18 +24,20 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {}) // 🔹 CORS 활성화
+                .cors(cors -> {
+                }) // 🔹 CORS 활성화
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/healthz").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 🔹 preflight 허용
-                        .requestMatchers("/api/auth/**").permitAll()            // 로그인/회원가입 등
+                        .requestMatchers("/api/auth/**").permitAll() // 로그인/회원가입 등
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll() // GET 공개 API 허용
+                        .requestMatchers("/api/minecraft/events/**").permitAll() // 마크 이벤트 API 공개
                         // ⬇️ 출석 QR 정책
                         .requestMatchers(HttpMethod.POST, "/api/attendance/qr").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/attendance/check-in").authenticated()
-                        .anyRequest().authenticated()                           // 나머지는 JWT 필요
+                        .anyRequest().authenticated() // 나머지는 JWT 필요
                 );
 
         http.addFilterBefore(new JwtAuthFilter(jwtUtil, userDetailsService),
@@ -43,6 +45,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();
@@ -52,7 +55,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*");  // 개발 중엔 전체 허용
+        config.addAllowedOriginPattern("*"); // 개발 중엔 전체 허용
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);
