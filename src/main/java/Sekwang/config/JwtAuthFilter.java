@@ -87,8 +87,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (path.startsWith("/actuator/health"))
             return true;
 
-        // 마인크래프트 이벤트 API 공개 (POST)
-        if (path.startsWith("/api/minecraft/events/"))
+        // 마인크래프트 API 전체 공개
+        if (path.startsWith("/api/minecraft/"))
             return true;
 
         // 읽기 공개 리소스 (GET만)
