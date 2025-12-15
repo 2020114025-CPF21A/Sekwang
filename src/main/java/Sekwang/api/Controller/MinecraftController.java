@@ -129,4 +129,28 @@ public class MinecraftController {
         minecraftService.recordPlayerLeave(playerName);
         return ResponseEntity.ok(Map.of("message", "Player leave recorded", "player", playerName));
     }
+
+    // ============ 이벤트 API ============
+
+    /**
+     * 이벤트 조회
+     * GET /api/minecraft/events
+     */
+    @GetMapping("/events")
+    public List<MinecraftDto.EventResponse> getEvents() {
+        return minecraftService.getRecentEvents();
+    }
+
+    /**
+     * 이벤트 기록 (GET)
+     * GET /api/minecraft/event?type=SPAWN&player=NAME&message=MSG
+     */
+    @GetMapping("/event")
+    public Map<String, String> recordEvent(
+            @RequestParam String type,
+            @RequestParam(required = false) String player,
+            @RequestParam(required = false) String message) {
+        minecraftService.recordEvent(type, player, message);
+        return Map.of("status", "ok", "type", type);
+    }
 }

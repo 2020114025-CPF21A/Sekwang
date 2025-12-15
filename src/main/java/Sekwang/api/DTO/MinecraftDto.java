@@ -83,4 +83,16 @@ public class MinecraftDto {
         private long totalSessions;
         private List<PlayerLogResponse> recentLogs;
     }
+
+    // 이벤트 응답 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class EventResponse {
+        private Long id;
+        private String eventType;
+        private String playerName;
+        private String message;
+        private LocalDateTime eventTime;
+    }
 }

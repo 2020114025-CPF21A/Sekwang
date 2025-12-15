@@ -2,7 +2,9 @@ package Sekwang.Service;
 
 import Sekwang.Domain.MinecraftPlayerLog;
 import Sekwang.Domain.MinecraftPlayerLog.EventType;
+import Sekwang.Domain.MinecraftEvent;
 import Sekwang.Repository.MinecraftPlayerLogRepository;
+import Sekwang.Repository.MinecraftEventRepository;
 import Sekwang.api.DTO.MinecraftDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class MinecraftService {
 
     private final MinecraftPlayerLogRepository logRepository;
+    private final MinecraftEventRepository eventRepository;
 
     @Value("${minecraft.server.host:localhost}")
     private String serverHost;
@@ -46,8 +49,9 @@ public class MinecraftService {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
-    public MinecraftService(MinecraftPlayerLogRepository logRepository) {
+    public MinecraftService(MinecraftPlayerLogRepository logRepository, MinecraftEventRepository eventRepository) {
         this.logRepository = logRepository;
+        this.eventRepository = eventRepository;
     }
 
     /**
@@ -287,5 +291,57 @@ public class MinecraftService {
                 serverHost,
                 serverPort,
                 -1);
+    }
+
+    // ============ 이벤트 관련 메소드 ============
+
+    /**
+     * 이벤트 기록
+     */
+    @Transactional
+    public void recordEvent(String eventType, String playerName, String message) {
+        try {
+            MinecraftEvent event = MinecraftEvent.builder()
+                    .eventType(eventType)
+                    .playerName(playerName)
+                    .message(message)
+                    .eventTime(LocalDateTime.now())
+                    .serverAddress(serverHost)
+                    .build();
+
+            if (eventRepository != null) {
+                eventRepository.save(event);
+            }
+            log.info("Event recorded: {} - {} - {}", eventType, playerName, message);
+        } catch (Exception e) {
+            log.warn("Failed to record event: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 최근 이벤트 조회
+     */
+    public List<MinecraftDto.EventResponse> getRecentEvents() {
+        try {
+            if (eventRepository == null)
+                return List.of();
+
+            return eventRepository.findAllByOrderByEventTimeDesc(
+                    org.springframework.data.domain.PageRequest.of(0, 50)).stream()
+                    .map(this::toEventResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("Failed to get events: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    private MinecraftDto.EventResponse toEventResponse(MinecraftEvent event) {
+        return new MinecraftDto.EventResponse(
+                event.getId(),
+                event.getEventType(),
+                event.getPlayerName(),
+                event.getMessage(),
+                event.getEventTime());
     }
 }
