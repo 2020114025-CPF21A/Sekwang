@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/minecraft")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class MinecraftController {
 
     private final MinecraftService minecraftService;
